@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Core.Configuration;
 using Core.Dtos;
@@ -7,6 +10,9 @@ using Core.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using SharedLibrary.Configurations;
+using System.IdentityModel.Token.Jwt;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 
 namespace Service.Services
 {
@@ -27,6 +33,19 @@ namespace Service.Services
             using var rnd = RandomNumberGenerator.Create();
             rnd.GetBytes(numberByte);
             return Convert.ToBase64String(numberByte);
+        }
+
+        private IEnumerable<Claim> GetClaim(UserApp userApp, List<string> audiences)
+        {
+            var userList = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userApp.Id),
+                new Claim(JwtRegisteredClaimNames.Email, userApp.Email),
+                new Claim(ClaimTypes.Email, userApp.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+            userList.AddRange(audiences.Select(x => new Claim(JwtRegisteredClaimNames.Aud, x)));
+            return userList;
         }
 
         public TokenDto CreateToken(UserApp user)
