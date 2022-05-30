@@ -1,8 +1,10 @@
-﻿namespace Core.Dtos
+﻿using System;
+
+namespace Core.Dtos
 {
     public class ClientTokenDto
     {
         public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
+        public DateTime AccessTokenExpiration { get; set; }
     }
 }
