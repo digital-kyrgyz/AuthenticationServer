@@ -13,6 +13,7 @@ using SharedLibrary.Configurations;
 using System.IdentityModel.Token.Jwt;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Service.Services
 {
@@ -35,7 +36,7 @@ namespace Service.Services
             return Convert.ToBase64String(numberByte);
         }
 
-        private IEnumerable<Claim> GetClaim(UserApp userApp, List<string> audiences)
+        private IEnumerable<Claim> GetClaims(UserApp userApp, List<string> audiences)
         {
             var userList = new List<Claim>
             {
@@ -59,7 +60,27 @@ namespace Service.Services
 
         public TokenDto CreateToken(UserApp user)
         {
-            throw new System.NotImplementedException();
+            var accessTokenExpiration = DateTime.Now.AddMinutes(_tokenOption.AccessTokenExpiration);
+            var refreshTokenExpiration = DateTime.Now.AddMinutes(_tokenOption.RefreshTokenExpiration);
+            var securityKey = SignService.GetSymmetricSecurityKey(_tokenOption.SecurityKey);
+            SigningCredentials signingCredentials =
+                new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
+            JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(
+                issuer: _tokenOption.Issuer,
+                expires: accessTokenExpiration,
+                notBefore: DateTime.Now,
+                claims: GetClaims(user, _tokenOption.Audience),
+                signingCredentials: signingCredentials);
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.WriteToken(jwtSecurityToken);
+            var tokenDto = new TokenDto()
+            {
+                AccessToken = token,
+                RefreshToken = CreateRefreshToken(),
+                AccessTokenExpiration = accessTokenExpiration,
+                RefreshTokenExpiration = refreshTokenExpiration,
+            };
+            return tokenDto;
         }
 
         public ClientTokenDto CreateTokenByClient(Client client)
