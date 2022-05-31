@@ -6,9 +6,9 @@ namespace Core.Services
 {
     public interface IAuthenticationService
     {
-        Task<ResponseDto<TokenDto>> CreateToken(LoginDto loginDto);
+        Task<ResponseDto<TokenDto>> CreateTokenAsync(LoginDto loginDto);
         Task<ResponseDto<TokenDto>> CreateTokenByRefreshToken(string refreshToken);
         Task<ResponseDto<NoDataDto>> RevokeRefreshToken(string refreshToken);
-        Task<ResponseDto<ClientTokenDto>> CreateTokenByClient(ClientLoginDto clientLoginDto);
+        ResponseDto<ClientTokenDto> CreateTokenByClient(ClientLoginDto clientLoginDto);
     }
 }
